@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,32 +20,6 @@ jobs:
         with:
           repository: dhis2-chap/chap-site
           ref: doc-reorganizing
-
-      - name: Create pyproject.toml
-        run: |
-          cat > pyproject.toml << 'EOF'
-          [project]
-          name = "chap-site-reorganized"
-          version = "0.1.0"
-          description = "DHIS2 Modeling documentation site"
-          requires-python = ">=3.10"
-          dependencies = [
-              "mkdocs",
-              "mkdocs-material",
-              "mkdocs-video",
-              "mkdocs-gen-files",
-              "mkdocs-minify-plugin",
-              "pymdown-extensions",
-          ]
-
-          [project.scripts]
-          serve = "mkdocs:serve"
-
-          [tool.uv.scripts]
-          serve = "mkdocs serve"
-          build = "mkdocs build"
-          EOF
-          sed -i 's/^          //' pyproject.toml
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -58,5 +32,18 @@ jobs:
       - name: Fetch external documentation
         run: python scripts/fetch-external-docs.py
 
-      - name: Deploy
-        run: mkdocs gh-deploy --force
+      - name: Build site
+        run: mkdocs build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
