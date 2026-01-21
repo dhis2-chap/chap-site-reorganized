@@ -32,6 +32,14 @@ jobs:
       - name: Fetch external documentation
         run: python scripts/fetch-external-docs.py
 
+      - name: Configure site URL
+        run: |
+          if grep -q "^site_url:" mkdocs.yml; then
+            sed -i 's|^site_url:.*|site_url: https://dhis2-chap.github.io/chap-site-reorganized/|' mkdocs.yml
+          else
+            echo "site_url: https://dhis2-chap.github.io/chap-site-reorganized/" >> mkdocs.yml
+          fi
+
       - name: Build site
         run: mkdocs build
 
